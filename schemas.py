@@ -1,48 +1,35 @@
 """
-Database Schemas
+Database Schemas for InvoiceFlow AI
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model represents a collection in MongoDB. The collection name is the lowercase
+of the class name (e.g., User -> "user", Invoice -> "invoice").
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
-
-# Example schemas (replace with your own):
+from typing import Optional, Literal
+from datetime import date
 
 class User(BaseModel):
     """
     Users collection schema
-    Collection name: "user" (lowercase of class name)
+    Collection name: "user"
     """
     name: str = Field(..., description="Full name")
     email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    subscription_tier: Literal["Free", "Pro"] = Field("Free", description="Subscription tier")
+    credits_remaining: int = Field(50, ge=0, description="Remaining credits for AI extraction")
+    role: Literal["admin", "customer"] = Field("customer", description="User role for access control")
 
-class Product(BaseModel):
+class Invoice(BaseModel):
     """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
+    Invoices collection schema
+    Collection name: "invoice"
     """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
-
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+    user_id: str = Field(..., description="ID of the user who uploaded the invoice")
+    file_path: Optional[str] = Field(None, description="Local path to stored file")
+    file_name: Optional[str] = Field(None, description="Original filename")
+    invoice_number: Optional[str] = Field(None, description="Invoice number")
+    vendor_name: Optional[str] = Field(None, description="Vendor name")
+    date: Optional[date] = Field(None, description="Invoice date")
+    total_amount: Optional[float] = Field(None, ge=0, description="Total amount")
+    status: Literal["Processing", "Needs Review", "Approved"] = Field("Processing", description="Review status")
